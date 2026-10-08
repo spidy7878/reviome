@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  ADMIN
+}
+
+enum LinkType {
+  REVIEW
+  CONTACT
+  SOCIAL
+  DIRECTIONS
+  WEBSITE
+  MENU
+  WIFI
+  CUSTOM
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// ─── Models ───────────────────────────────────────────────
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?  // URL to logo image
+  phone       String?
+  email       String?
+  website     String?
+  address     String?
+
+  googleMapsUrl   String?
+  googleReviewUrl String?
+
+  // Flexible JSON fields for extensible data
+  socialLinks Json? // { instagram: "...", facebook: "...", tiktok: "..." }
+  theme       Json? // { primaryColor: "#...", accentColor: "#..." }
+
+  // Subscription
+  plan              Plan     @default(FREE)
+  stripeCustomerId  String?  @unique
+  stripeSubId       String?  @unique
+  currentPeriodEnd  DateTime?
+
+  // Google Business Profile Connection (Server-Side)
+  googleAccountId      String?
+  googleLocationId     String?
+  googleLocationName   String?
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiresAt DateTime?
+  googleConnectedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cards Card[]
+  users User[]
+  reviews Review[]
+
+  @@index([googleLocationId])
+}
+
+model Card {
+  id         String   @id @default(cuid())
+  cardId     String   @unique // The NFC-encoded slug, e.g. "artisan-bakery-1"
+  label      String?  // Friendly name like "Front Counter Card"
+  isActive   Boolean  @default(true)
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scans      Scan[]
+  linkClicks LinkClick[]
+
+  @@index([businessId])
+}
+
+model Scan {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+
+  userAgent String?
+  ipHash    String?  // SHA-256 hashed IP for privacy
+  referer   String?
+  city      String?
+  country   String?
+
+  cardId String
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@index([timestamp])
+}
+
+model LinkClick {
+  id        String   @id @default(cuid())
+  linkType  LinkType
+  timestamp DateTime @default(now())
+
+  cardId String
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@index([linkType])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(OWNER)
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId])
+}
+
+model Review {
+  id               String    @id @default(cuid())
+  externalReviewId String?   @unique // Google Review ID when synchronized
+  rating           Int       // 1 to 5 stars
+  reviewText       String?   // Customer review text
+  reviewerName     String?   // Reviewer name (e.g. "Rahul S.")
+  reviewerPhotoUrl String?   // Avatar URL
+  reviewDate       DateTime  @default(now())
+
+  // Response tracking
+  responseText     String?
+  responseDate     DateTime?
+  responseStatus   String    @default("UNANSWERED") // "UNANSWERED" | "REPLIED" | "PENDING_SYNC"
+
+  businessId       String
+  business         Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([businessId])
+  @@index([rating])
+  @@index([responseStatus])
+}

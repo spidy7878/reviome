@@ -290,7 +290,7 @@ export default async function AnalyticsPage() {
           </div>
 
           <div className="mt-6 space-y-3">
-            {business.cards.map((card, idx) => (
+            {business.cards.map((card: any, idx: number) => (
               <div
                 key={card.id}
                 className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-[#fafaf8] p-3.5"

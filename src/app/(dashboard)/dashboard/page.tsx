@@ -78,7 +78,7 @@ export default async function DashboardOverviewPage() {
   });
 
   const clickMap: Record<string, number> = {};
-  clicksByTypeRaw.forEach((item) => {
+  clicksByTypeRaw.forEach((item: any) => {
     clickMap[item.linkType] = item._count.linkType;
   });
 
@@ -86,7 +86,7 @@ export default async function DashboardOverviewPage() {
   const contactClicks = clickMap["CONTACT"] || 0;
   const directionsClicks = clickMap["DIRECTIONS"] || 0;
   const websiteClicks = clickMap["WEBSITE"] || 0;
-  const totalClicks = clicksByTypeRaw.reduce((acc, c) => acc + c._count.linkType, 0);
+  const totalClicks = clicksByTypeRaw.reduce((acc: number, c: any) => acc + c._count.linkType, 0);
 
   // Recent scans feed
   const latestScans = await db.scan.findMany({
@@ -127,7 +127,7 @@ export default async function DashboardOverviewPage() {
 
   // Touchpoint Leaderboard
   const touchpointsSummary = business.cards
-    .map((card) => {
+    .map((card: any) => {
       const interactions = card._count.scans + card._count.linkClicks;
       return {
         id: card.id,
@@ -139,7 +139,7 @@ export default async function DashboardOverviewPage() {
         interactions,
       };
     })
-    .sort((a, b) => b.interactions - a.interactions);
+    .sort((a: any, b: any) => b.interactions - a.interactions);
 
   const topTouchpoint = touchpointsSummary[0] || null;
 
@@ -517,7 +517,7 @@ export default async function DashboardOverviewPage() {
                 No touchpoints configured.
               </p>
             ) : (
-              touchpointsSummary.map((card, idx) => (
+              touchpointsSummary.map((card: any, idx: number) => (
                 <div
                   key={card.id}
                   className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-[#fafaf8] p-3 text-xs"
@@ -583,7 +583,7 @@ export default async function DashboardOverviewPage() {
                 to generate real telemetry.
               </div>
             ) : (
-              latestScans.map((scan) => (
+              latestScans.map((scan: any) => (
                 <div
                   key={scan.id}
                   className="flex items-center justify-between py-3"

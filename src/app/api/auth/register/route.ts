@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create Business, User, and a default NFC Card in a transaction
-    const result = await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx: any) => {
       const business = await tx.business.create({
         data: {
           name: businessName.trim(),
